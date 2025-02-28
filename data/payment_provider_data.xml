@@ -6,6 +6,7 @@
         <field name="code">smilepay</field>
         <field name="company_id" ref="base.main_company"/>
         <field name="state">disabled</field>
+        <field name="is_published">Ture</field>
         <field name="allow_tokenization">False</field>
         <field name="capture_manually">False</field>
         <field name="allow_express_checkout">False</field>
