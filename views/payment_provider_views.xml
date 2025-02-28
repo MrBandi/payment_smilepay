@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="payment_provider_form_smilepay" model="ir.ui.view">
+        <field name="name">payment.provider.form.inherit.smilepay</field>
+        <field name="model">payment.provider</field>
+        <field name="inherit_id" ref="payment.payment_provider_form"/>
+        <field name="arch" type="xml">
+            <page name="credentials" position="inside">
+                <group name="smilepay" invisible="code != 'smilepay'">
+                    <field name="smilepay_rvg2c" invisible="code != 'smilepay'"/>
+                    <field name="smilepay_dcvc" invisible="code != 'smilepay'"/>
+                    <field name="smilepay_verify_key" invisible="code != 'smilepay'" password="True"/>
+                    <field name="smilepay_smseid" invisible="code != 'smilepay'"/>
+                </group>
+            </page>
+        </field>
+    </record>
+
+</odoo>

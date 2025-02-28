@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ATM銀行轉帳 -->
+    <template id="payment_method_smilepay_atm_form">
+        <div>
+            <div t-if="tx_id" class="alert alert-info mt-3">
+                <div class="row">
+                    <div class="col-12">
+                        <strong>銀行代號：</strong> <span t-esc="atm_bank_no or '待取得'"/>
+                        <t t-if="atm_bank_no == '004'"> (臺灣銀行)</t>
+                    </div>
+                    <div class="col-12">
+                        <strong>銀行帳號：</strong> <span t-esc="' '.join([atm_no[i:i+4] for i in range(0, len(atm_no), 4)]) if atm_no else '待取得'"/>
+                    </div>
+                    <div class="col-12">
+                        <strong>繳費金額：</strong> <span t-esc="amount or '0'"/> 元
+                    </div>
+                    <div class="col-12">
+                        <strong>繳費截止日期：</strong> <span t-esc="pay_end_date or '待取得'"/>
+                    </div>
+                </div>
+                <div t-if="qrcode_url" class="row mt-3">
+                    <div class="col-12">
+                        <strong>台灣銀行轉帳 QRCode</strong><br/>
+                        <img t-att-src="qrcode_url" alt="台灣銀行轉帳 QR Code" class="mt-2" style="max-width: 150px;"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- 超商條碼繳費 -->
+    <template id="payment_method_smilepay_barcode_form">
+        <div>
+            <div t-if="tx_id" class="alert alert-info mt-3">
+                <div class="row">
+                    <div class="col-12">
+                        <strong>繳費金額：</strong> <span t-esc="amount or '0'"/> 元
+                    </div>
+                    <div class="col-12">
+                        <strong>繳費截止日期：</strong> <span t-esc="pay_end_date or '待取得'"/>
+                    </div>
+                </div>
+                <div t-if="barcode1 and barcode2 and barcode3" class="row mt-3">
+                    <div class="col-12">
+                        <button id="show_barcode_btn" class="btn btn-primary" onclick="showBarcode()">顯示繳費條碼</button>
+                        <script>
+                            function showBarcode() {
+                                var w = 600;
+                                var h = 550;
+                                var left = (screen.width/2)-(w/2);
+                                var top = (screen.height/2)-(h/2);
+                                var newWindow = window.open('', '_blank', 'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width='+w+', height='+h+', top='+top+', left='+left);
+                                newWindow.document.write('<html><head><title>繳費條碼</title></head><body style="margin:0; display:flex; justify-content:center; align-items:center; flex-direction:column; font-family: Arial, sans-serif;">');
+                                newWindow.document.write('<table style="width:80%; margin-bottom:20px; border-collapse: collapse;">');
+                                newWindow.document.write('<tr><th style="border:1px solid #ddd; padding:8px; background-color:#f2f2f2; text-align:left; width:30%;">訂單編號</th><td style="border:1px solid #ddd; padding:8px;">' + '<span t-esc="tx_id"/>' + '</td></tr>');
+                                newWindow.document.write('<tr><th style="border:1px solid #ddd; padding:8px; background-color:#f2f2f2; text-align:left; width:30%;">訂單金額</th><td style="border:1px solid #ddd; padding:8px;">NT$ ' + '<span t-esc="amount"/>' + '</td></tr>');
+                                newWindow.document.write('<tr><th style="border:1px solid #ddd; padding:8px; background-color:#f2f2f2; text-align:left; width:30%;">繳費期限</th><td style="border:1px solid #ddd; padding:8px;">' + '<span t-esc="pay_end_date"/>' + '</td></tr>');
+                                newWindow.document.write('</table>');
+                                newWindow.document.write('<img t-att-src="\'https://payment-code.atomroute.com/barcode.php?code=\' + barcode1" style="margin-bottom:10px;" />');
+                                newWindow.document.write('<img t-att-src="\'https://payment-code.atomroute.com/barcode.php?code=\' + barcode2" style="margin-bottom:10px;" />');
+                                newWindow.document.write('<img t-att-src="\'https://payment-code.atomroute.com/barcode.php?code=\' + barcode3" />');
+                                newWindow.document.write('</body></html>');
+                                newWindow.document.close();
+                            }
+                        </script>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- 7-11 ibon -->
+    <template id="payment_method_smilepay_ibon_form">
+        <div>
+            <div t-if="tx_id" class="alert alert-info mt-3">
+                <div class="row">
+                    <div class="col-12">
+                        <strong>ibon 繳費代碼：</strong> <span t-esc="ibon_no or '待取得'"/>
+                    </div>
+                    <div class="col-12">
+                        <strong>繳費金額：</strong> <span t-esc="amount or '0'"/> 元
+                    </div>
+                    <div class="col-12">
+                        <strong>繳費截止日期：</strong> <span t-esc="pay_end_date or '待取得'"/>
+                    </div>
+                </div>
+                <div t-if="qrcode_url" class="row mt-3">
+                    <div class="col-12">
+                        <strong>ibon 專用 QRCode</strong><br/>
+                        <img t-att-src="qrcode_url" alt="ibon 繳費代碼 QR Code" class="mt-2" style="max-width: 150px;"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- 全家 FamiPort -->
+    <template id="payment_method_smilepay_famiport_form">
+        <div>
+            <div t-if="tx_id" class="alert alert-info mt-3">
+                <div class="row">
+                    <div class="col-12">
+                        <strong>全家繳費代碼：</strong> <span t-esc="fami_no or '待取得'"/>
+                    </div>
+                    <div class="col-12">
+                        <strong>繳費金額：</strong> <span t-esc="amount or '0'"/> 元
+                    </div>
+                    <div class="col-12">
+                        <strong>繳費截止日期：</strong> <span t-esc="pay_end_date or '待取得'"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+</odoo>
