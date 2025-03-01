@@ -33,6 +33,8 @@ class PaymentTransaction(models.Model):
         if self.provider_code != 'smilepay':
             return res
 
+        _logger.info(f"Getting rendering values for SmilePay transaction: {self.reference} with method: {self.payment_method_code}")
+        
         # 生成支付資訊
         self._generate_smilepay_payment_info()
         payment_method_code = self.payment_method_code
@@ -70,6 +72,7 @@ class PaymentTransaction(models.Model):
                 'amount': int(self.amount),
             })
         
+        _logger.info(f"SmilePay rendering values: {rendering_values}")
         return rendering_values
 
     def _get_atm_qrcode_url(self):
@@ -94,8 +97,11 @@ class PaymentTransaction(models.Model):
         """生成SmilePay支付資訊"""
         self.ensure_one()
         
+        _logger.info(f"Generating SmilePay payment info for transaction {self.reference}")
+        
         # 檢查是否已經有支付資訊
         if self._check_existing_payment_info():
+            _logger.info(f"Payment info already exists for transaction {self.reference}")
             return
             
         # 獲取提供者和交易資訊
@@ -103,11 +109,14 @@ class PaymentTransaction(models.Model):
         payment_method_code = self.payment_method_code
         
         if not provider.smilepay_rvg2c or not provider.smilepay_dcvc or not provider.smilepay_verify_key:
+            _logger.error(f"SmilePay configuration incomplete for provider ID {provider.id}")
             raise ValidationError(_("SmilePay 配置不完整。請確保已正確設置參數碼、商家代號和檢查碼。"))
         
         # 設置API參數
         base_api_url = 'https://ssl.smse.com.tw/api/SPPayment.asp'
         roturl = f"{self.env['ir.config_parameter'].sudo().get_param('web.base.url')}/payment/smilepay/callback/{payment_method_code}"
+        
+        _logger.info(f"SmilePay callback URL: {roturl}")
         
         # 根據支付方式設置pay_zg值
         pay_zg = {
@@ -133,13 +142,23 @@ class PaymentTransaction(models.Model):
             'Verify_key': provider.smilepay_verify_key
         }
         
+        _logger.info(f"SmilePay API parameters: {api_params}")
+        
         # 呼叫API
         try:
             api_url = f"{base_api_url}?{urls.url_encode(api_params)}"
+            _logger.info(f"Calling SmilePay API: {api_url}")
+            
             response = requests.get(api_url, timeout=10)
+            _logger.info(f"SmilePay API response status: {response.status_code}")
+            
             if response.status_code != 200:
                 _logger.error(f"SmilePay API錯誤: HTTP狀態碼 {response.status_code}")
+                _logger.error(f"SmilePay API response content: {response.content}")
                 raise ValidationError(_("無法連接到SmilePay服務。"))
+                
+            # 記錄響應內容以便調試
+            _logger.info(f"SmilePay API response: {response.content}")
                 
             # 解析XML響應
             xml_data = ET.fromstring(response.content)
@@ -153,30 +172,49 @@ class PaymentTransaction(models.Model):
             # 更新交易的支付資訊
             update_vals = {
                 'smilepay_no': xml_data.find('SmilePayNO').text,
-                'smilepay_pay_end_date': datetime.strptime(xml_data.find('PayEndDate').text, '%Y/%m/%d %H:%M:%S'),
             }
+            
+            # 如果PayEndDate存在，則解析它
+            pay_end_date_elem = xml_data.find('PayEndDate')
+            if pay_end_date_elem is not None and pay_end_date_elem.text:
+                try:
+                    update_vals['smilepay_pay_end_date'] = datetime.strptime(pay_end_date_elem.text, '%Y/%m/%d %H:%M:%S')
+                except ValueError as e:
+                    _logger.warning(f"無法解析PayEndDate '{pay_end_date_elem.text}': {str(e)}")
             
             # 根據支付方式提取特定資訊
             if payment_method_code == 'smilepay_atm':
-                update_vals.update({
-                    'smilepay_atm_bank_no': xml_data.find('AtmBankNo').text,
-                    'smilepay_atm_no': xml_data.find('AtmNo').text,
-                })
+                atm_bank_no = xml_data.find('AtmBankNo')
+                atm_no = xml_data.find('AtmNo')
+                if atm_bank_no is not None and atm_no is not None:
+                    update_vals.update({
+                        'smilepay_atm_bank_no': atm_bank_no.text,
+                        'smilepay_atm_no': atm_no.text,
+                    })
             elif payment_method_code == 'smilepay_barcode':
-                update_vals.update({
-                    'smilepay_barcode1': xml_data.find('Barcode1').text,
-                    'smilepay_barcode2': xml_data.find('Barcode2').text,
-                    'smilepay_barcode3': xml_data.find('Barcode3').text,
-                })
+                barcode1 = xml_data.find('Barcode1')
+                barcode2 = xml_data.find('Barcode2')
+                barcode3 = xml_data.find('Barcode3')
+                if barcode1 is not None and barcode2 is not None and barcode3 is not None:
+                    update_vals.update({
+                        'smilepay_barcode1': barcode1.text,
+                        'smilepay_barcode2': barcode2.text,
+                        'smilepay_barcode3': barcode3.text,
+                    })
             elif payment_method_code == 'smilepay_ibon':
-                update_vals.update({
-                    'smilepay_ibon_no': xml_data.find('IbonNo').text,
-                })
+                ibon_no = xml_data.find('IbonNo')
+                if ibon_no is not None:
+                    update_vals.update({
+                        'smilepay_ibon_no': ibon_no.text,
+                    })
             elif payment_method_code == 'smilepay_famiport':
-                update_vals.update({
-                    'smilepay_fami_no': xml_data.find('FamiNO').text,
-                })
+                fami_no = xml_data.find('FamiNO')
+                if fami_no is not None:
+                    update_vals.update({
+                        'smilepay_fami_no': fami_no.text,
+                    })
                 
+            _logger.info(f"Updating transaction {self.reference} with values: {update_vals}")
             self.write(update_vals)
             self._set_pending(state_message="等待付款中")
             

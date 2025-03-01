@@ -76,3 +76,4 @@ class PaymentProvider(models.Model):
         f *= 9
 
         return e + f
+    

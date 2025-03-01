@@ -44,23 +44,29 @@
                 </div>
                 <div t-if="barcode1 and barcode2 and barcode3" class="row mt-3">
                     <div class="col-12">
-                        <button id="show_barcode_btn" class="btn btn-primary" onclick="showBarcode()">顯示繳費條碼</button>
+                        <button id="show_barcode_btn" class="btn btn-primary" t-att-data-tx-id="tx_id" t-att-data-amount="amount" t-att-data-pay-end-date="pay_end_date" t-att-data-barcode1="barcode1" t-att-data-barcode2="barcode2" t-att-data-barcode3="barcode3" onclick="showBarcode(this)">顯示繳費條碼</button>
                         <script>
-                            function showBarcode() {
+                            function showBarcode(btn) {
                                 var w = 600;
                                 var h = 550;
                                 var left = (screen.width/2)-(w/2);
                                 var top = (screen.height/2)-(h/2);
+                                var txId = btn.getAttribute('data-tx-id');
+                                var amount = btn.getAttribute('data-amount');
+                                var payEndDate = btn.getAttribute('data-pay-end-date');
+                                var barcode1 = btn.getAttribute('data-barcode1');
+                                var barcode2 = btn.getAttribute('data-barcode2');
+                                var barcode3 = btn.getAttribute('data-barcode3');
                                 var newWindow = window.open('', '_blank', 'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width='+w+', height='+h+', top='+top+', left='+left);
                                 newWindow.document.write('<html><head><title>繳費條碼</title></head><body style="margin:0; display:flex; justify-content:center; align-items:center; flex-direction:column; font-family: Arial, sans-serif;">');
                                 newWindow.document.write('<table style="width:80%; margin-bottom:20px; border-collapse: collapse;">');
-                                newWindow.document.write('<tr><th style="border:1px solid #ddd; padding:8px; background-color:#f2f2f2; text-align:left; width:30%;">訂單編號</th><td style="border:1px solid #ddd; padding:8px;">' + '<span t-esc="tx_id"/>' + '</td></tr>');
-                                newWindow.document.write('<tr><th style="border:1px solid #ddd; padding:8px; background-color:#f2f2f2; text-align:left; width:30%;">訂單金額</th><td style="border:1px solid #ddd; padding:8px;">NT$ ' + '<span t-esc="amount"/>' + '</td></tr>');
-                                newWindow.document.write('<tr><th style="border:1px solid #ddd; padding:8px; background-color:#f2f2f2; text-align:left; width:30%;">繳費期限</th><td style="border:1px solid #ddd; padding:8px;">' + '<span t-esc="pay_end_date"/>' + '</td></tr>');
+                                newWindow.document.write('<tr><th style="border:1px solid #ddd; padding:8px; background-color:#f2f2f2; text-align:left; width:30%;">訂單編號</th><td style="border:1px solid #ddd; padding:8px;">' + txId + '</td></tr>');
+                                newWindow.document.write('<tr><th style="border:1px solid #ddd; padding:8px; background-color:#f2f2f2; text-align:left; width:30%;">訂單金額</th><td style="border:1px solid #ddd; padding:8px;">NT$ ' + amount + '</td></tr>');
+                                newWindow.document.write('<tr><th style="border:1px solid #ddd; padding:8px; background-color:#f2f2f2; text-align:left; width:30%;">繳費期限</th><td style="border:1px solid #ddd; padding:8px;">' + payEndDate + '</td></tr>');
                                 newWindow.document.write('</table>');
-                                newWindow.document.write('<img t-att-src="\'https://payment-code.atomroute.com/barcode.php?code=\' + barcode1" style="margin-bottom:10px;" />');
-                                newWindow.document.write('<img t-att-src="\'https://payment-code.atomroute.com/barcode.php?code=\' + barcode2" style="margin-bottom:10px;" />');
-                                newWindow.document.write('<img t-att-src="\'https://payment-code.atomroute.com/barcode.php?code=\' + barcode3" />');
+                                newWindow.document.write('<img src="https://payment-code.atomroute.com/barcode.php?code=' + barcode1 + '" style="margin-bottom:10px;" />');
+                                newWindow.document.write('<img src="https://payment-code.atomroute.com/barcode.php?code=' + barcode2 + '" style="margin-bottom:10px;" />');
+                                newWindow.document.write('<img src="https://payment-code.atomroute.com/barcode.php?code=' + barcode3 + '" />');
                                 newWindow.document.write('</body></html>');
                                 newWindow.document.close();
                             }
