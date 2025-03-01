@@ -1,17 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo noupdate="1">
-
-    <record id="payment_provider_smilepay" model="payment.provider">
-        <field name="name">SmilePay (速買配)</field>
-        <field name="code">smilepay</field>
-        <field name="company_id" ref="base.main_company"/>
-        <field name="state">disabled</field>
-        <field name="is_published">Ture</field>
-        <field name="allow_tokenization">False</field>
-        <field name="capture_manually">False</field>
-        <field name="allow_express_checkout">False</field>
-        <field name="available_currency_ids" eval="[(6, 0, [ref('base.TWD')])]"/>
-        <field name="payment_method_ids" eval="[(4, 0, [ref('payment_smilepay.payment_method_smilepay_atm')]), (4, 0, [ref('payment_smilepay.payment_method_smilepay_barcode')]), (4, 0, [ref('payment_smilepay.payment_method_smilepay_ibon')]), (4, 0, [ref('payment_smilepay.payment_method_smilepay_famiport')])]"/>
+    <!-- 注册支付模式对应的支付方法 -->
+    <record id="payment_method_smilepay_atm" model="payment.method">
+        <field name="name">ATM 銀行轉帳</field>
+        <field name="code">bank_transfer</field>
+        <field name="sequence">100</field>
+        <field name="image" type="base64" file="payment_smilepay/static/img/smilepay_atm.png" />
     </record>
 
+    <record id="payment_method_smilepay_ibon" model="payment.method">
+        <field name="name">7-11 ibon</field>
+        <field name="code">7eleven</field>
+        <field name="sequence">110</field>
+        <field name="image" type="base64" file="payment_smilepay/static/img/smilepay_ibon.png" />
+    </record>
+
+    <record id="payment_method_smilepay_fami" model="payment.method">
+        <field name="name">全家 FamiPort</field>
+        <field name="code">fami</field>
+        <field name="sequence">120</field>
+        <field name="image" type="base64" file="payment_smilepay/static/img/smilepay_famiport.png" />
+    </record>
+
+    <record id="payment_provider_smilepay" model="payment.provider">
+        <field name="name">SmilePay</field>
+        <field name="code">smilepay</field>
+        <field name="module_id" ref="base.module_payment_smilepay" />
+        <field name="company_id" ref="base.main_company" />
+        <field name="state">disabled</field>
+        <field name="redirect_form_view_id" ref="payment_smilepay_redirect_form" />
+        <!-- <field name="payment_method_ids" eval="[(4, 0,
+        ref('payment_smilepay.payment_method_smilepay_atm')), (4, 0,
+        ref('payment_smilepay.payment_method_smilepay_ibon')), (4, 0,
+        ref('payment_smilepay.payment_method_smilepay_fami'))]"/> -->
+        <field name="payment_method_ids" eval="[(6, 0, [ref('payment_method_smilepay_atm'), ref('payment_method_smilepay_ibon'), ref('payment_method_smilepay_fami')])]" />
+    </record>
 </odoo>

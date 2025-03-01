@@ -6,14 +6,15 @@
         <field name="model">payment.provider</field>
         <field name="inherit_id" ref="payment.payment_provider_form"/>
         <field name="arch" type="xml">
-            <page name="credentials" position="inside">
-                <group name="smilepay" invisible="code != 'smilepay'">
-                    <field name="smilepay_rvg2c" invisible="code != 'smilepay'"/>
-                    <field name="smilepay_dcvc" invisible="code != 'smilepay'"/>
-                    <field name="smilepay_verify_key" invisible="code != 'smilepay'" password="True"/>
-                    <field name="smilepay_smseid" invisible="code != 'smilepay'"/>
+            <group name="provider_credentials" position="inside">
+                <group invisible="code != 'smilepay'">
+                    <field name="smilepay_merchant_id" placeholder="例如: 107" invisible="code != 'smilepay'"/>
+                    <field name="smilepay_parameter_code" placeholder="例如: 1" invisible="code != 'smilepay'"/>
+                    <field name="smilepay_verify_key" password="True" invisible="code != 'smilepay'"/>
+                    <field name="smilepay_payment_method" widget="radio" invisible="code != 'smilepay'"/>
+                    <field name="smilepay_environment" widget="radio" invisible="code != 'smilepay'"/>
                 </group>
-            </page>
+            </group>
         </field>
     </record>
 

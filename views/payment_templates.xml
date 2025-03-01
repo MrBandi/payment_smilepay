@@ -1,120 +1,134 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- ATM銀行轉帳 -->
-    <template id="payment_method_smilepay_atm_form">
-        <div>
-            <div t-if="tx_id" class="alert alert-info mt-3">
-                <div class="row">
-                    <div class="col-12">
-                        <strong>銀行代號：</strong> <span t-esc="atm_bank_no or '待取得'"/>
-                        <t t-if="atm_bank_no == '004'"> (臺灣銀行)</t>
-                    </div>
-                    <div class="col-12">
-                        <strong>銀行帳號：</strong> <span t-esc="' '.join([atm_no[i:i+4] for i in range(0, len(atm_no), 4)]) if atm_no else '待取得'"/>
-                    </div>
-                    <div class="col-12">
-                        <strong>繳費金額：</strong> <span t-esc="amount or '0'"/> 元
-                    </div>
-                    <div class="col-12">
-                        <strong>繳費截止日期：</strong> <span t-esc="pay_end_date or '待取得'"/>
-                    </div>
-                </div>
-                <div t-if="qrcode_url" class="row mt-3">
-                    <div class="col-12">
-                        <strong>台灣銀行轉帳 QRCode</strong><br/>
-                        <img t-att-src="qrcode_url" alt="台灣銀行轉帳 QR Code" class="mt-2" style="max-width: 150px;"/>
-                    </div>
-                </div>
+    <!-- 使用重定向表單將用戶重定向到 SmilePay 付款頁面 -->
+    <template id="payment_smilepay_redirect_form">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mt-2">您的付款資訊已準備就緒</h3>
             </div>
-        </div>
-    </template>
-
-    <!-- 超商條碼繳費 -->
-    <template id="payment_method_smilepay_barcode_form">
-        <div>
-            <div t-if="tx_id" class="alert alert-info mt-3">
-                <div class="row">
-                    <div class="col-12">
-                        <strong>繳費金額：</strong> <span t-esc="amount or '0'"/> 元
+            <div class="card-body">
+                <t t-if="smilepay_payment_method == 'vacc'">
+                    <!-- ATM 付款資訊 -->
+                    <div class="row">
+                        <div class="col-12">
+                            <h4>ATM 虛擬帳號轉帳資訊</h4>
+                            <p>請使用以下資訊完成付款：</p>
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <tr>
+                                        <th class="text-right">訂單編號</th>
+                                        <td><t t-esc="tx_reference"/></td>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-right">金額</th>
+                                        <td><t t-esc="payment_data.get('Amount')"/> 元</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-right">銀行代碼</th>
+                                        <td><t t-esc="payment_data.get('AtmBankNo')"/></td>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-right">虛擬帳號</th>
+                                        <td><t t-esc="payment_data.get('AtmNo')"/></td>
+                                    </tr>
+                                    <tr t-if="payment_data.get('PayEndDate')">
+                                        <th class="text-right">繳費期限</th>
+                                        <td><t t-esc="payment_data.get('PayEndDate')"/></td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="alert alert-info">
+                                <p>請於期限內至任何銀行ATM轉帳繳費。完成繳費後，系統將自動更新您的訂單狀態。</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-12">
-                        <strong>繳費截止日期：</strong> <span t-esc="pay_end_date or '待取得'"/>
+                </t>
+                
+                <t t-if="smilepay_payment_method == 'ibon'">
+                    <!-- 7-11 ibon 付款資訊 -->
+                    <div class="row">
+                        <div class="col-12">
+                            <h4>7-11 ibon 繳費資訊</h4>
+                            <p>請使用以下資訊完成付款：</p>
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <tr>
+                                        <th class="text-right">訂單編號</th>
+                                        <td><t t-esc="tx_reference"/></td>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-right">金額</th>
+                                        <td><t t-esc="payment_data.get('Amount')"/> 元</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-right">繳費代碼</th>
+                                        <td><t t-esc="payment_data.get('IbonNo')"/></td>
+                                    </tr>
+                                    <tr t-if="payment_data.get('PayEndDate')">
+                                        <th class="text-right">繳費期限</th>
+                                        <td><t t-esc="payment_data.get('PayEndDate')"/></td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="alert alert-info">
+                                <p>請於期限內攜帶上述繳費代碼，至7-11超商的ibon機台列印繳費單後，至櫃台繳費。完成繳費後，系統將自動更新您的訂單狀態。</p>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div t-if="barcode1 and barcode2 and barcode3" class="row mt-3">
-                    <div class="col-12">
-                        <button id="show_barcode_btn" class="btn btn-primary" t-att-data-tx-id="tx_id" t-att-data-amount="amount" t-att-data-pay-end-date="pay_end_date" t-att-data-barcode1="barcode1" t-att-data-barcode2="barcode2" t-att-data-barcode3="barcode3" onclick="showBarcode(this)">顯示繳費條碼</button>
-                        <script>
-                            function showBarcode(btn) {
-                                var w = 600;
-                                var h = 550;
-                                var left = (screen.width/2)-(w/2);
-                                var top = (screen.height/2)-(h/2);
-                                var txId = btn.getAttribute('data-tx-id');
-                                var amount = btn.getAttribute('data-amount');
-                                var payEndDate = btn.getAttribute('data-pay-end-date');
-                                var barcode1 = btn.getAttribute('data-barcode1');
-                                var barcode2 = btn.getAttribute('data-barcode2');
-                                var barcode3 = btn.getAttribute('data-barcode3');
-                                var newWindow = window.open('', '_blank', 'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width='+w+', height='+h+', top='+top+', left='+left);
-                                newWindow.document.write('<html><head><title>繳費條碼</title></head><body style="margin:0; display:flex; justify-content:center; align-items:center; flex-direction:column; font-family: Arial, sans-serif;">');
-                                newWindow.document.write('<table style="width:80%; margin-bottom:20px; border-collapse: collapse;">');
-                                newWindow.document.write('<tr><th style="border:1px solid #ddd; padding:8px; background-color:#f2f2f2; text-align:left; width:30%;">訂單編號</th><td style="border:1px solid #ddd; padding:8px;">' + txId + '</td></tr>');
-                                newWindow.document.write('<tr><th style="border:1px solid #ddd; padding:8px; background-color:#f2f2f2; text-align:left; width:30%;">訂單金額</th><td style="border:1px solid #ddd; padding:8px;">NT$ ' + amount + '</td></tr>');
-                                newWindow.document.write('<tr><th style="border:1px solid #ddd; padding:8px; background-color:#f2f2f2; text-align:left; width:30%;">繳費期限</th><td style="border:1px solid #ddd; padding:8px;">' + payEndDate + '</td></tr>');
-                                newWindow.document.write('</table>');
-                                newWindow.document.write('<img src="https://payment-code.atomroute.com/barcode.php?code=' + barcode1 + '" style="margin-bottom:10px;" />');
-                                newWindow.document.write('<img src="https://payment-code.atomroute.com/barcode.php?code=' + barcode2 + '" style="margin-bottom:10px;" />');
-                                newWindow.document.write('<img src="https://payment-code.atomroute.com/barcode.php?code=' + barcode3 + '" />');
-                                newWindow.document.write('</body></html>');
-                                newWindow.document.close();
-                            }
-                        </script>
+                </t>
+                
+                <t t-if="smilepay_payment_method == 'fami'">
+                    <!-- 全家 FamiPort 付款資訊 -->
+                    <div class="row">
+                        <div class="col-12">
+                            <h4>全家 FamiPort 繳費資訊</h4>
+                            <p>請使用以下資訊完成付款：</p>
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <tr>
+                                        <th class="text-right">訂單編號</th>
+                                        <td><t t-esc="tx_reference"/></td>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-right">金額</th>
+                                        <td><t t-esc="payment_data.get('Amount')"/> 元</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-right">繳費代碼</th>
+                                        <td><t t-esc="payment_data.get('FamiNO')"/></td>
+                                    </tr>
+                                    <tr t-if="payment_data.get('PayEndDate')">
+                                        <th class="text-right">繳費期限</th>
+                                        <td><t t-esc="payment_data.get('PayEndDate')"/></td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="alert alert-info">
+                                <p>請於期限內攜帶上述繳費代碼，至全家超商的FamiPort機台列印繳費單後，至櫃台繳費。完成繳費後，系統將自動更新您的訂單狀態。</p>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-        </div>
-    </template>
-
-    <!-- 7-11 ibon -->
-    <template id="payment_method_smilepay_ibon_form">
-        <div>
-            <div t-if="tx_id" class="alert alert-info mt-3">
-                <div class="row">
-                    <div class="col-12">
-                        <strong>ibon 繳費代碼：</strong> <span t-esc="ibon_no or '待取得'"/>
+                </t>
+                
+                <!-- 通用條碼資訊 -->
+                <t t-if="payment_data.get('Barcode1') and payment_data.get('Barcode2') and payment_data.get('Barcode3')">
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h4>超商繳費條碼</h4>
+                            <div class="alert alert-info">
+                                <p>您也可以使用以下條碼至超商繳費：</p>
+                                <p>條碼1: <t t-esc="payment_data.get('Barcode1')"/></p>
+                                <p>條碼2: <t t-esc="payment_data.get('Barcode2')"/></p>
+                                <p>條碼3: <t t-esc="payment_data.get('Barcode3')"/></p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-12">
-                        <strong>繳費金額：</strong> <span t-esc="amount or '0'"/> 元
-                    </div>
-                    <div class="col-12">
-                        <strong>繳費截止日期：</strong> <span t-esc="pay_end_date or '待取得'"/>
-                    </div>
-                </div>
-                <div t-if="qrcode_url" class="row mt-3">
-                    <div class="col-12">
-                        <strong>ibon 專用 QRCode</strong><br/>
-                        <img t-att-src="qrcode_url" alt="ibon 繳費代碼 QR Code" class="mt-2" style="max-width: 150px;"/>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </template>
-
-    <!-- 全家 FamiPort -->
-    <template id="payment_method_smilepay_famiport_form">
-        <div>
-            <div t-if="tx_id" class="alert alert-info mt-3">
-                <div class="row">
-                    <div class="col-12">
-                        <strong>全家繳費代碼：</strong> <span t-esc="fami_no or '待取得'"/>
-                    </div>
-                    <div class="col-12">
-                        <strong>繳費金額：</strong> <span t-esc="amount or '0'"/> 元
-                    </div>
-                    <div class="col-12">
-                        <strong>繳費截止日期：</strong> <span t-esc="pay_end_date or '待取得'"/>
+                </t>
+                
+                <div class="row mt-3">
+                    <div class="col-12 text-center">
+                        <a href="/my/orders" class="btn btn-primary">返回我的訂單</a>
                     </div>
                 </div>
             </div>

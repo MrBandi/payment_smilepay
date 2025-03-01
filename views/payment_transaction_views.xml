@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="payment_transaction_form_smilepay" model="ir.ui.view">
+        <field name="name">payment.transaction.form.inherit.smilepay</field>
+        <field name="model">payment.transaction</field>
+        <field name="inherit_id" ref="payment.payment_transaction_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='transaction_details']" position="after">
+                <group string="SmilePay 付款資訊" invisible="provider_code != 'smilepay'">
+                    <field name="smilepay_payment_no"/>
+                    <field name="smilepay_expire_date"/>
+                    <field name="smilepay_atm_bank_no" invisible="provider_id.smilepay_payment_method != 'vacc'"/>
+                    <field name="smilepay_atm_no" invisible="provider_id.smilepay_payment_method != 'vacc'"/>
+                    <field name="smilepay_ibon_no" invisible="provider_id.smilepay_payment_method != 'ibon'"/>
+                    <field name="smilepay_fami_no" invisible="provider_id.smilepay_payment_method != 'fami'"/>
+                    <field name="smilepay_barcode1" invisible="not smilepay_barcode1"/>
+                    <field name="smilepay_barcode2" invisible="not smilepay_barcode2"/>
+                    <field name="smilepay_barcode3" invisible="not smilepay_barcode3"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
